@@ -38,22 +38,41 @@ class SetTest < Minitest::Test
 
   def test_max_length_default
     self.max_length = nil
-    phrase = 'the quick brown fox jumps over the lazy dog.'
-    set.add(phrase)
-    card = redis.zcard("#{ prefix }:#{ phrase[0..14] }")
-    assert_equal card, 1
-    card = redis.zcard("#{ prefix }:#{ phrase[0..15] }")
-    assert_equal card, 0
+    assert stores_length(15)
+    refute stores_length(16)
   end
 
   def test_max_length_option
     self.max_length = 4
-    phrase = 'the quick brown fox jumps over the lazy dog.'
+    assert stores_length(4)
+    refute stores_length(5)
+  end
+
+  def stores_length(l)
+    phrase = random_string(l * 2)
     set.add(phrase)
-    card = redis.zcard("#{ prefix }:#{ phrase[0..3] }")
-    assert_equal card, 1
-    card = redis.zcard("#{ prefix }:#{ phrase[0..4] }")
-    assert_equal card, 0
+    0 < redis.zcard("#{ prefix }:#{ phrase[0...l] }")
+  end
+
+  def test_max_terms_default
+    self.max_terms = nil
+    assert_max_terms(250)
+  end
+
+  def test_max_terms_option
+    self.max_terms = 40
+    assert_max_terms(40)
+  end
+
+  def assert_max_terms(max)
+    (max + 25).times do
+      set.add("foo#{ random_string(8) }")
+    end
+    assert_equal max, redis.zcount("#{ prefix }:foo", '-inf', '+inf')
+  end
+
+  def random_string(chars)
+    (0...chars).map { (97 + rand(26)).chr }.join
   end
 
   def teardown

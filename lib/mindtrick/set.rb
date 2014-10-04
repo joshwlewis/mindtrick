@@ -28,11 +28,10 @@ module Mindtrick
 
     private
 
-    def enforce_term_limit(partial)
-      key = Text.new(partial).prefixed(prefix)
+    def enforce_term_limit(key)
       if (over = redis.zcount(key, 0, '+inf') - max_terms) > 0
-        partials = redis.zrange(key, 0, count * 3).sample(over)
-        redis.zrem(k, partials)
+        partials = redis.zrange(key, 0, over * 3).sample(over)
+        redis.zrem(key, partials)
       end
     end
 

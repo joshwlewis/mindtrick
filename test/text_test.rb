@@ -7,9 +7,19 @@ class TextTest < Minitest::Test
   end
 
   def test_each_fragment_map
-    text = Mindtrick::Text.new("abcd")
-    expected = ['', 'a', 'ab', 'abc', 'abcd']
+    text = Mindtrick::Text.new(" abc de")
+    expected = ['', 'a', 'ab', 'abc', 'abc ', 'abc d', 'abc de']
     result = text.each_fragment.map(&:to_s)
     assert_equal expected, result
+  end
+
+  def test_term
+    text = Mindtrick::Text.new(" the dude \t abides. ")
+    assert_equal text.term, "the dude abides."
+  end
+
+  def test_prefix
+    text = Mindtrick::Text.new("bar")
+    assert_equal text.prefixed('foo'), "foo:bar"
   end
 end
