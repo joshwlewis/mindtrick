@@ -10,37 +10,32 @@ module Mindtrick
     end
 
     def add(term)
-      value = normalize(term)
-      key   = term.downcase
-      length = [value.length, max_length].min
-      (0..length).each do |l|
-        k = add_prefix(key[0...l])
-        enforce_term_limit(k, term)
-        redis.zincrby(k, 1, term)
+      term = Text.new(term)
+      term.each_fragment do |f|
+        if f.length <= max_length
+          k = f.prefixed(prefix)
+          redis.zincrby(k, 1, term)
+          enforce_term_limit(k)
+        end
       end
-      value
+      term
     end
 
-    def search(term, count = 10)
-      key = add_prefix(normalize(term).downcase)
+    def suggest(partial, count = 10)
+      key = Text.new(partial).prefixed(prefix)
       redis.zrevrange key, 0, count
     end
 
     private
 
-    def enforce_term_limit(key, term)
-      if (over = redis.zcount(key) - max_terms) > 0
-        redis.zremrangebyrank(key, 0, over)
+    def enforce_term_limit(partial)
+      key = Text.new(partial).prefixed(prefix)
+      if (over = redis.zcount(key, 0, '+inf') - max_terms) > 0
+        partials = redis.zrange(key, 0, count * 3).sample(over)
+        redis.zrem(k, partials)
       end
     end
 
-    def normalize(term)
-      term.strip.gsub(/\s+/,' ')
-    end
-
-    def add_prefix(term)
-      "#{ prefix }:#{ term }"
-    end
 
   end
 end
