@@ -3,7 +3,7 @@ module Mindtrick
     def each_fragment
       return to_enum(:each_fragment) unless block_given?
       (0..term.length).each do |i|
-        yield term[0...i]
+        yield self.class.new(term[0...i])
       end
     end
 
