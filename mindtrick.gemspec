@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'mindtrick/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "Mindtrick"
+  spec.name          = "mindtrick"
   spec.version       = Mindtrick::VERSION
   spec.authors       = ["Josh Lewis"]
   spec.email         = ["josh.w.lewis@gmail.com"]
