@@ -22,10 +22,16 @@ class SetTest < Minitest::Test
     end
   end
 
-
   def test_add
     set.add('qux')
     assert_includes set.suggest('q'), 'qux'
+  end
+
+  def test_seed
+    set.seed('apple')
+    assert_equal 1, redis.zscore("#{ prefix }:a", 'apple')
+    set.seed('apple')
+    assert_equal 1, redis.zscore("#{ prefix }:a", 'apple')
   end
 
   def test_suggest

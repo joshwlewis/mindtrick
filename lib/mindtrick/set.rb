@@ -10,15 +10,30 @@ module Mindtrick
     end
 
     def add(term)
-      term = Text.new(term)
-      term.each_fragment do |f|
-        if f.length <= max_length
-          k = f.prefixed(prefix)
-          redis.zincrby(k, 1, term)
+      fragmentize(term) do |k|
+        redis.zincrby(k, 1, term)
+        enforce_term_limit(k)
+      end
+    end
+
+    def seed(term)
+      fragmentize(term) do |k|
+        unless redis.zscore(k, term)
+          redis.zadd(k, 1, term)
           enforce_term_limit(k)
         end
       end
-      term
+    end
+
+    def fragmentize(term)
+      term = Text.new(term)
+      term.each_fragment do |f|
+        if f.length <= max_length
+          yield f.prefixed(prefix)
+        else
+          break
+        end
+      end
     end
 
     def suggest(partial, count = 10)
